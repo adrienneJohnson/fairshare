@@ -299,7 +299,7 @@ describe("Dashboard", () => {
     await waitFor(() => expect(shareholderNameInput).not.toBeVisible());
     expect(
       await screen.findByTestId("shareholder-Mike-group")
-    ).toHaveTextContent("employee");
+    ).toHaveTextContent("investor");
   }, 10000);
 });
 
