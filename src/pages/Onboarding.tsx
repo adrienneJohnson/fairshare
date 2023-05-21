@@ -32,7 +32,7 @@ import {
 } from "@chakra-ui/react";
 import produce from "immer";
 import { useContext } from "react";
-import { Company, Grant, Shareholder, User } from "../types";
+import { Company, Grant, ShareType, Shareholder, User } from "../types";
 import { useMutation, useQueryClient } from "react-query";
 import { AuthContext } from "../App";
 import { ShareTypes } from "../consts";
@@ -236,6 +236,7 @@ export function ShareholderGrantsStep() {
         <Thead>
           <Tr>
             <Th>Occasion</Th>
+            <Th>Class</Th>
             <Th>Amount</Th>
             <Th>Date</Th>
             <Th></Th>
@@ -245,6 +246,11 @@ export function ShareholderGrantsStep() {
           {shareholder.grants.map((gid) => (
             <Tr key={gid}>
               <Td>{grants[gid].name}</Td>
+              <Td>
+                {grants[gid].type === ShareTypes.Common
+                  ? "Common"
+                  : "Preferred"}
+              </Td>
               <Td>{grants[gid].amount}</Td>
               <Td>{grants[gid].issued}</Td>
             </Tr>
@@ -279,6 +285,23 @@ export function ShareholderGrantsStep() {
                   setDraftGrant((g) => ({ ...g, name: e.target.value }))
                 }
               />
+            </FormControl>
+            <FormControl>
+              <Select
+                variant="flushed"
+                placeholder="Type of share"
+                data-testid="grant-share-type"
+                value={draftGrant.type}
+                onChange={(e) =>
+                  setDraftGrant((g) => ({
+                    ...g,
+                    type: e.target.value as ShareType,
+                  }))
+                }
+              >
+                <option value={ShareTypes.Common}>Common</option>
+                <option value={ShareTypes.Preferred}>Preferred</option>
+              </Select>
             </FormControl>
             <FormControl>
               <Input

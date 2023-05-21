@@ -20,9 +20,10 @@ import {
   AlertTitle,
   AlertIcon,
   TableCaption,
+  Select,
 } from "@chakra-ui/react";
 import { ReactComponent as Avatar } from "../assets/avatar-male.svg";
-import { Company, Grant, Shareholder } from "../types";
+import { Company, Grant, ShareType, Shareholder } from "../types";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import produce from "immer";
 import { ShareTypes } from "../consts";
@@ -209,6 +210,23 @@ export function ShareholderPage() {
                   setDraftGrant((g) => ({ ...g, name: e.target.value }))
                 }
               />
+            </FormControl>
+            <FormControl>
+              <Select
+                variant="flushed"
+                placeholder="Type of share"
+                data-testid="grant-share-type"
+                value={draftGrant.type}
+                onChange={(e) =>
+                  setDraftGrant((g) => ({
+                    ...g,
+                    type: e.target.value as ShareType,
+                  }))
+                }
+              >
+                <option value={ShareTypes.Common}>Common</option>
+                <option value={ShareTypes.Preferred}>Preferred</option>
+              </Select>
             </FormControl>
             <FormControl>
               <Input
