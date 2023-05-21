@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { VictoryPie } from "victory";
 import { Link, useParams } from "react-router-dom";
 import { ArrowForwardIcon } from "@chakra-ui/icons";
@@ -23,9 +23,52 @@ import {
   AlertIcon,
   Select,
 } from "@chakra-ui/react";
-import { Grant, Shareholder } from "../types";
+import {
+  DataMap,
+  Grant,
+  Shareholder,
+  ChartViewMode,
+  ChartData,
+} from "../types";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import produce from "immer";
+import { ShareTypes } from "../consts";
+
+export const calculateChartData = (
+  mode: ChartViewMode,
+  shareholder: DataMap<Shareholder>,
+  grant: DataMap<Grant>
+): ChartData[] => {
+  switch (mode) {
+    case "investor":
+      return Object.values(shareholder)
+        .map((s) => ({
+          x: s.name,
+          y: s.grants.reduce(
+            (acc: number, grantID: number) => acc + grant[grantID].amount,
+            0
+          ),
+        }))
+        .filter((e) => e.y > 0);
+    case "group":
+      return ["investor", "founder", "employee"].map((group) => ({
+        x: group,
+        y: Object.values(shareholder ?? {})
+          .filter((s) => s.group === group)
+          .flatMap((s) => s.grants)
+          .reduce((acc, grantID: number) => acc + grant[grantID].amount, 0),
+      }));
+    case "class":
+      return Object.values(ShareTypes).map((c) => ({
+        x: c,
+        y: Object.values(grant ?? {})
+          .filter((g) => g.type === c)
+          .reduce((acc, grant) => acc + grant.amount, 0),
+      }));
+    default:
+      return [];
+  }
+};
 
 export function Dashboard() {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -63,13 +106,25 @@ export function Dashboard() {
   );
 
   // TODO: using this dictionary thing a lot... hmmm
-  const grant = useQuery<{ [dataID: number]: Grant }, string>("grants", () =>
+  const grant = useQuery<DataMap<Grant>, string>("grants", () =>
     fetch("/grants").then((e) => e.json())
   );
-  const shareholder = useQuery<{ [dataID: number]: Shareholder }>(
-    "shareholders",
-    () => fetch("/shareholders").then((e) => e.json())
+
+  const shareholder = useQuery<DataMap<Shareholder>>("shareholders", () =>
+    fetch("/shareholders").then((e) => e.json())
   );
+
+  const chartData = useMemo(() => {
+    if (!shareholder.data || !grant.data) {
+      return [];
+    }
+
+    return calculateChartData(
+      mode as ChartViewMode,
+      shareholder.data,
+      grant.data
+    );
+  }, [mode, grant.data, shareholder.data]);
 
   if (grant.status === "error") {
     return (
@@ -79,6 +134,7 @@ export function Dashboard() {
       </Alert>
     );
   }
+
   if (grant.status !== "success") {
     return <Spinner />;
   }
@@ -89,35 +145,6 @@ export function Dashboard() {
         <AlertTitle>Failed to get any data</AlertTitle>
       </Alert>
     );
-  }
-
-  // TODO: why are these inline?
-  function getGroupData() {
-    if (!shareholder.data || !grant.data) {
-      return [];
-    }
-    return ["investor", "founder", "employee"].map((group) => ({
-      x: group,
-      y: Object.values(shareholder?.data ?? {})
-        .filter((s) => s.group === group)
-        .flatMap((s) => s.grants)
-        .reduce((acc, grantID) => acc + grant.data[grantID].amount, 0),
-    }));
-  }
-
-  function getInvestorData() {
-    if (!shareholder.data || !grant.data) {
-      return [];
-    }
-    return Object.values(shareholder.data)
-      .map((s) => ({
-        x: s.name,
-        y: s.grants.reduce(
-          (acc, grantID) => acc + grant.data[grantID].amount,
-          0
-        ),
-      }))
-      .filter((e) => e.y > 0);
   }
 
   async function submitNewShareholder(e: React.FormEvent) {
@@ -155,12 +182,18 @@ export function Dashboard() {
           >
             By Group
           </Button>
+          <Button
+            colorScheme="teal"
+            as={Link}
+            to="/dashboard/class"
+            variant="ghost"
+            isActive={mode === "class"}
+          >
+            By Share Type
+          </Button>
         </Stack>
       </Stack>
-      <VictoryPie
-        colorScale="blue"
-        data={mode === "investor" ? getInvestorData() : getGroupData()}
-      />
+      <VictoryPie colorScale="blue" data={chartData} />
       <Stack divider={<StackDivider />}>
         <Heading>Shareholders</Heading>
         <Table>

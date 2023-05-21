@@ -1,4 +1,4 @@
-import { ShareTypes } from "./consts";
+import { ChartViewModes, ShareTypes } from "./consts";
 export interface User {
   name: string;
   email: string;
@@ -23,4 +23,14 @@ export interface Shareholder {
   email?: string;
   grants: number[];
   group: "employee" | "founder" | "investor";
+}
+
+export type DataMap<Resource> = { [dataID: number]: Resource };
+
+export type ChartViewMode =
+  (typeof ChartViewModes)[keyof typeof ChartViewModes];
+
+export interface ChartData {
+  x: string;
+  y: number;
 }

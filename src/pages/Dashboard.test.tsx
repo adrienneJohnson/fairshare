@@ -302,3 +302,5 @@ describe("Dashboard", () => {
     ).toHaveTextContent("employee");
   }, 10000);
 });
+
+describe("calculateChartData", () => {});
