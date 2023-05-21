@@ -35,6 +35,7 @@ import { useContext } from "react";
 import { Company, Grant, Shareholder, User } from "../types";
 import { useMutation, useQueryClient } from "react-query";
 import { AuthContext } from "../App";
+import { ShareTypes } from "../consts";
 
 export const OnboardingContext = React.createContext<
   OnboardingFields & { dispatch: React.Dispatch<OnboardingAction> }
@@ -194,7 +195,7 @@ export function ShareholdersStep() {
 
 export function ShareholderGrantsStep() {
   const { shareholders, grants, dispatch } = useContext(OnboardingContext);
-  const { shareholderID = '' } = useParams();
+  const { shareholderID = "" } = useParams();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const shareholder = shareholders[parseInt(shareholderID, 10)];
 
@@ -202,7 +203,7 @@ export function ShareholderGrantsStep() {
     name: "",
     amount: 0,
     issued: "",
-    type: "common",
+    type: ShareTypes.Common,
   });
 
   if (!shareholder) {
@@ -222,9 +223,9 @@ export function ShareholderGrantsStep() {
       },
     });
     onClose();
-    setDraftGrant({ name: "", amount: 0, issued: "", type: "common" });
+    setDraftGrant({ name: "", amount: 0, issued: "", type: ShareTypes.Common });
   }
-  console.log(shareholder)
+  console.log(shareholder);
 
   return (
     <Stack>

@@ -1,5 +1,10 @@
 import React from "react";
-import { render, screen, waitFor, waitForElementToBeRemoved } from "@testing-library/react";
+import {
+  render,
+  screen,
+  waitFor,
+  waitForElementToBeRemoved,
+} from "@testing-library/react";
 import {
   CompanyStep,
   OnboardingContext,
@@ -12,6 +17,7 @@ import {
 import { Navigate, Route, Routes } from "react-router-dom";
 import userEvent from "@testing-library/user-event";
 import { getTestRouter, ThemeWrapper } from "../testutils";
+import { ShareTypes } from "../consts";
 
 const defaultOnboardingState = {
   userName: "",
@@ -65,12 +71,12 @@ describe("Onboarding", () => {
     );
 
     const nameField = screen.getByRole("textbox", { name: /who is setting/ });
-    await userEvent.click(nameField)
+    await userEvent.click(nameField);
     await userEvent.type(nameField, "Terry");
     expect(nameField).toHaveValue("Terry");
 
     const emailField = screen.getByRole("textbox", { name: /email/ });
-    await userEvent.click(emailField)
+    await userEvent.click(emailField);
     await userEvent.type(emailField, "great@email.com");
     expect(emailField).toHaveValue("great@email.com");
 
@@ -135,7 +141,7 @@ describe("Onboarding", () => {
     await userEvent.selectOptions(groupPicker, "founder");
     await userEvent.click(createButton);
 
-    await waitForElementToBeRemoved(newShareholderNameField)
+    await waitForElementToBeRemoved(newShareholderNameField);
     expect(screen.getByText("Anne")).toBeInTheDocument();
 
     await userEvent.click(addShareholdersButton);
@@ -174,7 +180,7 @@ describe("Onboarding", () => {
                 name: "Initial issuance",
                 amount: 1000,
                 issued: Date.now().toLocaleString(),
-                type: "common",
+                type: ShareTypes.Common,
               },
             },
           }}

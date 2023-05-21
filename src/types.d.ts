@@ -1,3 +1,4 @@
+import { ShareTypes } from "./consts";
 export interface User {
   name: string;
   email: string;
@@ -6,12 +7,14 @@ export interface User {
 export interface Company {
   name: string;
 }
+
+export type ShareType = (typeof ShareTypes)[keyof typeof ShareTypes];
 export interface Grant {
   id: number;
   name: string;
   amount: number;
   issued: string;
-  type: "common";
+  type: ShareType;
 }
 export interface Shareholder {
   id: number;

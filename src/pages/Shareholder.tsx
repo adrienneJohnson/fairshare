@@ -25,11 +25,12 @@ import { ReactComponent as Avatar } from "../assets/avatar-male.svg";
 import { Company, Grant, Shareholder } from "../types";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import produce from "immer";
+import { ShareTypes } from "../consts";
 
 export function ShareholderPage() {
   const queryClient = useQueryClient();
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const { shareholderID = ''} = useParams();
+  const { shareholderID = "" } = useParams();
   const grantQuery = useQuery<{ [dataID: number]: Grant }>("grants", () =>
     fetch("/grants").then((e) => e.json())
   );
@@ -47,7 +48,7 @@ export function ShareholderPage() {
     name: "",
     amount: 0,
     issued: "",
-    type: "common",
+    type: ShareTypes.Common,
   });
   const grantMutation = useMutation<Grant, unknown, Omit<Grant, "id">>(
     (grant) =>
@@ -90,7 +91,12 @@ export function ShareholderPage() {
     try {
       await grantMutation.mutateAsync(draftGrant);
       onClose();
-      setDraftGrant({ name: "", amount: 0, issued: "", type: "common" });
+      setDraftGrant({
+        name: "",
+        amount: 0,
+        issued: "",
+        type: ShareTypes.Common,
+      });
     } catch (e) {
       console.warn(e);
     }

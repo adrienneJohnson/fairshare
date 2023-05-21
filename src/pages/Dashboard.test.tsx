@@ -1,15 +1,11 @@
 import React from "react";
-import {
-  render,
-  screen,
-  waitFor,
-  within,
-} from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import { getTestRouter, server, ThemeWrapper } from "../testutils";
 import { Dashboard } from "./Dashboard";
 import { Route, Routes } from "react-router";
 import { getHandlers } from "../handlers";
 import userEvent from "@testing-library/user-event";
+import { ShareTypes } from "../consts";
 
 describe("Dashboard", () => {
   it("should show a row for all shareholders", async () => {
@@ -29,42 +25,42 @@ describe("Dashboard", () => {
             name: "Initial Grant",
             amount: 1000,
             issued: Date.now().toLocaleString(),
-            type: "common",
+            type: ShareTypes.Common,
           },
           2: {
             id: 2,
             name: "Incentive Package 2020",
             amount: 500,
             issued: Date.now().toLocaleString(),
-            type: "common",
+            type: ShareTypes.Common,
           },
           3: {
             id: 3,
             name: "Options Conversion 2020",
             amount: 100,
             issued: Date.now().toLocaleString(),
-            type: "common",
+            type: ShareTypes.Common,
           },
           4: {
             id: 4,
             name: "Options Conversion 2019",
             amount: 90,
             issued: Date.now().toLocaleString(),
-            type: "common",
+            type: ShareTypes.Common,
           },
           5: {
             id: 5,
             name: "Options Conversion 2020",
             amount: 30,
             issued: Date.now().toLocaleString(),
-            type: "common",
+            type: ShareTypes.Common,
           },
           6: {
             id: 6,
             name: "Series A Purchase",
             amount: 500,
             issued: Date.now().toLocaleString(),
-            type: "common",
+            type: ShareTypes.Common,
           },
         },
       },
@@ -140,35 +136,35 @@ describe("Dashboard", () => {
             name: "Initial Grant",
             amount: 1000,
             issued: Date.now().toLocaleString(),
-            type: "common",
+            type: ShareTypes.Common,
           },
           2: {
             id: 2,
             name: "Incentive Package 2020",
             amount: 500,
             issued: Date.now().toLocaleString(),
-            type: "common",
+            type: ShareTypes.Common,
           },
           3: {
             id: 3,
             name: "Options Conversion 2020",
             amount: 100,
             issued: Date.now().toLocaleString(),
-            type: "common",
+            type: ShareTypes.Common,
           },
           4: {
             id: 4,
             name: "Options Conversion 2019",
             amount: 90,
             issued: Date.now().toLocaleString(),
-            type: "common",
+            type: ShareTypes.Common,
           },
           5: {
             id: 5,
             name: "Options Conversion 2020",
             amount: 30,
             issued: Date.now().toLocaleString(),
-            type: "common",
+            type: ShareTypes.Common,
           },
         },
       },
@@ -207,21 +203,21 @@ describe("Dashboard", () => {
             name: "Initial Grant",
             amount: 1000,
             issued: Date.now().toLocaleString(),
-            type: "common",
+            type: ShareTypes.Common,
           },
           2: {
             id: 2,
             name: "Incentive Package 2020",
             amount: 500,
             issued: Date.now().toLocaleString(),
-            type: "common",
+            type: ShareTypes.Common,
           },
           6: {
             id: 6,
             name: "Series A Purchase",
             amount: 500,
             issued: Date.now().toLocaleString(),
-            type: "common",
+            type: ShareTypes.Common,
           },
         },
       },
@@ -262,14 +258,14 @@ describe("Dashboard", () => {
             name: "Initial Grant",
             amount: 1000,
             issued: Date.now().toLocaleString(),
-            type: "common",
+            type: ShareTypes.Common,
           },
           2: {
             id: 2,
             name: "Incentive Package 2020",
             amount: 500,
             issued: Date.now().toLocaleString(),
-            type: "common",
+            type: ShareTypes.Common,
           },
         },
       },
