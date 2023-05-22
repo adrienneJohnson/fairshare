@@ -6,12 +6,13 @@ import { Route, Routes } from "react-router";
 import { getHandlers } from "../handlers";
 import userEvent from "@testing-library/user-event";
 import { ShareTypes } from "../consts";
-import { Company, Grant, Shareholder } from "../types";
+import { Company, Grant, Share, Shareholder } from "../types";
 
 interface ShareholdersInitialState {
   company: Company;
   shareholders: Record<number, Shareholder>;
   grants: Record<number, Grant>;
+  shares: Record<number, Share>;
 }
 
 describe("ShareholderPage", () => {
@@ -37,6 +38,18 @@ describe("ShareholderPage", () => {
           amount: 500,
           issued: Date.now().toLocaleString(),
           type: ShareTypes.Preferred,
+        },
+      },
+      shares: {
+        1: {
+          id: 1,
+          shareType: ShareTypes.Common,
+          value: "1.5",
+        },
+        2: {
+          id: 2,
+          shareType: ShareTypes.Preferred,
+          value: "5",
         },
       },
     };

@@ -22,52 +22,49 @@ import {
   AlertTitle,
   AlertIcon,
   Select,
+  StatGroup,
+  Stat,
+  StatLabel,
+  StatNumber,
+  Flex,
+  Box,
+  Spacer,
 } from "@chakra-ui/react";
-import {
-  DataMap,
-  Grant,
-  Shareholder,
-  ChartViewMode,
-  ChartData,
-} from "../types";
+import { DataMap, Grant, Shareholder, ChartData, Share } from "../types";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import produce from "immer";
-import { ShareTypes } from "../consts";
+import { ChartViewModes, ShareTypes } from "../consts";
 
 export const calculateChartData = (
-  mode: ChartViewMode,
   shareholder: DataMap<Shareholder>,
   grant: DataMap<Grant>
-): ChartData[] => {
-  switch (mode) {
-    case "investor":
-      return Object.values(shareholder)
-        .map((s) => ({
-          x: s.name,
-          y: s.grants.reduce(
-            (acc: number, grantID: number) => acc + grant[grantID].amount,
-            0
-          ),
-        }))
-        .filter((e) => e.y > 0);
-    case "group":
-      return ["investor", "founder", "employee"].map((group) => ({
+): Record<string, ChartData[]> => {
+  return {
+    [ChartViewModes.ByInvestor]: Object.values(shareholder)
+      .map((s) => ({
+        x: s.name,
+        y: s.grants.reduce(
+          (acc: number, grantID: number) => acc + grant[grantID].amount,
+          0
+        ),
+      }))
+      .filter((e) => e.y > 0),
+    [ChartViewModes.ByGroup]: ["investor", "founder", "employee"].map(
+      (group) => ({
         x: group,
-        y: Object.values(shareholder ?? {})
+        y: Object.values(shareholder)
           .filter((s) => s.group === group)
           .flatMap((s) => s.grants)
           .reduce((acc, grantID: number) => acc + grant[grantID].amount, 0),
-      }));
-    case "class":
-      return Object.values(ShareTypes).map((c) => ({
-        x: c,
-        y: Object.values(grant ?? {})
-          .filter((g) => g.type === c)
-          .reduce((acc, grant) => acc + grant.amount, 0),
-      }));
-    default:
-      return [];
-  }
+      })
+    ),
+    [ChartViewModes.ByShareType]: Object.values(ShareTypes).map((c) => ({
+      x: c,
+      y: Object.values(grant)
+        .filter((g) => g.type === c)
+        .reduce((acc, grant) => acc + grant.amount, 0),
+    })),
+  };
 };
 
 export function Dashboard() {
@@ -76,7 +73,7 @@ export function Dashboard() {
   const [newShareholder, setNewShareholder] = React.useState<
     Omit<Shareholder, "id" | "grants">
   >({ name: "", group: "employee" });
-  const { mode } = useParams();
+  const { mode = ChartViewModes.ByGroup } = useParams();
 
   const shareholderMutation = useMutation<
     Shareholder,
@@ -114,17 +111,51 @@ export function Dashboard() {
     fetch("/shareholders").then((e) => e.json())
   );
 
+  const shares = useQuery<{ [dataID: number]: Share }>("shares", () =>
+    fetch("/shares").then((e) => e.json())
+  );
+
   const chartData = useMemo(() => {
     if (!shareholder.data || !grant.data) {
-      return [];
+      return {};
     }
 
-    return calculateChartData(
-      mode as ChartViewMode,
-      shareholder.data,
-      grant.data
+    return calculateChartData(shareholder.data, grant.data);
+  }, [grant.data, shareholder.data]);
+
+  const shareTotals = useMemo<
+    Record<string, { numShares: number; valueShares: number }>
+  >(() => {
+    const chartDataByShareType = chartData[ChartViewModes.ByShareType];
+
+    if (!shares.data || !grant.data || !chartDataByShareType) {
+      return {};
+    }
+
+    return Object.values(shares.data).reduce(
+      (acc, shareType) => {
+        const { y: numShares } =
+          chartDataByShareType.find(
+            (data) => data["x"] === shareType.shareType
+          ) || ({} as ChartData);
+
+        const valueShares = numShares * parseFloat(shareType.value);
+
+        return {
+          ...acc,
+          [shareType.shareType]: {
+            numShares,
+            valueShares,
+          },
+          total: {
+            numShares: acc.total.numShares + numShares,
+            valueShares: acc.total.valueShares + valueShares,
+          },
+        };
+      },
+      { total: { numShares: 0, valueShares: 0 } }
     );
-  }, [mode, grant.data, shareholder.data]);
+  }, [shares.data, grant.data, chartData]);
 
   if (grant.status === "error") {
     return (
@@ -138,7 +169,7 @@ export function Dashboard() {
   if (grant.status !== "success") {
     return <Spinner />;
   }
-  if (!grant.data || !shareholder.data) {
+  if (!grant.data || !shareholder.data || !shares.data) {
     return (
       <Alert status="error">
         <AlertIcon />
@@ -193,8 +224,50 @@ export function Dashboard() {
           </Button>
         </Stack>
       </Stack>
-      <VictoryPie colorScale="blue" data={chartData} />
+      <VictoryPie colorScale="blue" data={chartData[mode]} />
       <Stack divider={<StackDivider />}>
+        <Heading>Market Value</Heading>
+        <Box>
+          <Table>
+            <Thead>
+              <Tr>
+                <Td>Share Type</Td>
+                <Td>Number of Shares</Td>
+                <Td>Per Share</Td>
+                <Td>Total Value</Td>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {Object.values(shares.data).map(({ id, shareType, value }) => (
+                <Tr key={id}>
+                  <Td>{shareType}</Td>
+                  <Td>{shareTotals[shareType].numShares.toLocaleString()}</Td>
+                  <Td>${value}</Td>
+                  <Td>
+                    ${shareTotals[shareType].valueShares.toLocaleString()}
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+          <StatGroup backgroundColor="teal.100">
+            <Flex>
+              <Stat p="8">
+                <StatLabel>Total Valuation</StatLabel>
+                <StatNumber>
+                  ${shareTotals.total.valueShares.toLocaleString()}
+                </StatNumber>
+              </Stat>
+              <Spacer />
+              <Stat p="8">
+                <StatLabel>Total Shares</StatLabel>
+                <StatNumber>
+                  {shareTotals.total.numShares.toLocaleString()}
+                </StatNumber>
+              </Stat>
+            </Flex>
+          </StatGroup>
+        </Box>
         <Heading>Shareholders</Heading>
         <Table>
           <Thead>

@@ -23,7 +23,7 @@ import {
   Select,
 } from "@chakra-ui/react";
 import { ReactComponent as Avatar } from "../assets/avatar-male.svg";
-import { Company, Grant, ShareType, Shareholder } from "../types";
+import { Company, Grant, Share, ShareType, Shareholder } from "../types";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import produce from "immer";
 import { ShareTypes } from "../consts";
@@ -43,6 +43,10 @@ export function ShareholderPage() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const companyQuery = useQuery<Company>("company", () =>
     fetch("/company").then((e) => e.json())
+  );
+
+  const shareQuery = useQuery<{ [dataID: number]: Share }>("shares", () =>
+    fetch("/shares").then((e) => e.json())
   );
 
   const [draftGrant, setDraftGrant] = React.useState<Omit<Grant, "id">>({
@@ -105,11 +109,12 @@ export function ShareholderPage() {
 
   if (
     grantQuery.status !== "success" ||
-    shareholderQuery.status !== "success"
+    shareholderQuery.status !== "success" ||
+    shareQuery.status !== "success"
   ) {
     return <Spinner />;
   }
-  if (!grantQuery.data || !shareholderQuery.data) {
+  if (!grantQuery.data || !shareholderQuery.data || !shareQuery.data) {
     return (
       <Alert status="error">
         <AlertIcon />
@@ -119,6 +124,21 @@ export function ShareholderPage() {
   }
 
   const shareholder = shareholderQuery.data[parseInt(shareholderID)];
+  const shareTypes = Object.values(shareQuery.data);
+
+  const calculateShareValue = (
+    shareTypes: Share[],
+    type: string,
+    amount: number
+  ) => {
+    const shareType = shareTypes.find((st) => st.shareType === type);
+
+    if (shareType) {
+      return "$" + (parseFloat(shareType.value) * amount).toLocaleString();
+    } else {
+      return "N/A";
+    }
+  };
 
   return (
     <Stack>
@@ -178,9 +198,9 @@ export function ShareholderPage() {
                 <Tr key={grantID}>
                   <Td>{name}</Td>
                   <Td>{new Date(issued).toLocaleDateString()}</Td>
-                  <Td>{amount}</Td>
+                  <Td>{amount.toLocaleString()}</Td>
                   <Td>{type}</Td>
-                  <Td></Td>
+                  <Td>{calculateShareValue(shareTypes, type, amount)}</Td>
                 </Tr>
               );
             }
@@ -224,8 +244,11 @@ export function ShareholderPage() {
                   }))
                 }
               >
-                <option value={ShareTypes.Common}>Common</option>
-                <option value={ShareTypes.Preferred}>Preferred</option>
+                {shareTypes.map((s) => (
+                  <option value={s.shareType} key={s.id}>
+                    {s.shareType}
+                  </option>
+                ))}
               </Select>
             </FormControl>
             <FormControl>

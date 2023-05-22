@@ -1,5 +1,5 @@
 import { rest } from "msw";
-import { Company, User, Shareholder, Grant } from "./types";
+import { Company, User, Shareholder, Grant, Share } from "./types";
 
 function nextID(collection: { [key: number]: unknown }) {
   return (
@@ -16,16 +16,24 @@ export function getHandlers(
     users?: { [email: string]: User };
     shareholders?: { [id: number]: Shareholder };
     grants?: { [id: number]: Grant };
+    shares?: { [id: number]: Share };
   } = {},
   persist: boolean = false
 ) {
-  let { company, users = {}, shareholders = {}, grants = {} } = params;
+  let {
+    company,
+    users = {},
+    shareholders = {},
+    grants = {},
+    shares = {},
+  } = params;
   if (persist) {
     storeState({
       shareholders,
       users,
       grants,
       company,
+      shares,
     });
     setInterval(() => {
       if (localStorage.getItem("data")) {
@@ -34,6 +42,7 @@ export function getHandlers(
           users,
           grants,
           company,
+          shares,
         });
       }
     }, 5000);
@@ -55,31 +64,28 @@ export function getHandlers(
       return res(ctx.json(company));
     }),
 
-    rest.post<Omit<Shareholder, "id">>(
-      "/shareholder/new",
-      (req, res, ctx) => {
-        const { name, email, grants = [], group } = req.body;
-        const shareholder: Shareholder = {
-          name,
-          email,
-          grants,
-          id: nextID(shareholders),
-          group,
-        };
-        shareholders[shareholder.id] = shareholder;
-        if (email) {
-          const existingUser = users[email];
-          if (existingUser.shareholderID) {
-            // User already has a shareholder ID
-            console.error("User already has a shareholder ID");
-            return res(ctx.status(400));
-          }
-          users[email].shareholderID = shareholder.id;
+    rest.post<Omit<Shareholder, "id">>("/shareholder/new", (req, res, ctx) => {
+      const { name, email, grants = [], group } = req.body;
+      const shareholder: Shareholder = {
+        name,
+        email,
+        grants,
+        id: nextID(shareholders),
+        group,
+      };
+      shareholders[shareholder.id] = shareholder;
+      if (email) {
+        const existingUser = users[email];
+        if (existingUser.shareholderID) {
+          // User already has a shareholder ID
+          console.error("User already has a shareholder ID");
+          return res(ctx.status(400));
         }
-
-        return res(ctx.json(shareholder));
+        users[email].shareholderID = shareholder.id;
       }
-    ),
+
+      return res(ctx.json(shareholder));
+    }),
 
     rest.post<{ shareholderID?: number; grant: Omit<Grant, "id"> }>(
       "/grant/new",
@@ -117,6 +123,40 @@ export function getHandlers(
       return res(ctx.json(req.body));
     }),
 
+    rest.post<Omit<Share, "id">>("/share/new", async (req, res, ctx) => {
+      const { value, shareType } = await req.json();
+
+      // Included a gesture/placeholder here and in the share update endpoint to acknowledge that requests like these would have authentication and permission checks.
+      // const session = sessionStorage.getItem("session");
+      // console.log("checking session in handler", session);
+      // if (!session || !JSON.parse(session).email) {
+      //   return res(
+      //     ctx.status(403),
+      //     ctx.json({
+      //       errorMessage: "You are not authorized",
+      //     })
+      //   );
+      // }
+
+      if (!value || !shareType) {
+        return res(
+          ctx.status(400),
+          ctx.json({
+            errorMessage: "You must provide the share type and value",
+          })
+        );
+      }
+
+      const share: Share = {
+        shareType,
+        value,
+        id: nextID(shares),
+      };
+      shares[share.id] = share;
+
+      return res(ctx.json(share));
+    }),
+
     rest.get("/grants", (req, res, ctx) => {
       return res(ctx.json(grants));
     }),
@@ -127,6 +167,10 @@ export function getHandlers(
 
     rest.get("/company", (req, res, ctx) => {
       return res(ctx.json(company));
+    }),
+
+    rest.get("/shares", async (req, res, ctx) => {
+      return res(ctx.json(shares));
     }),
 
     rest.post<Shareholder>(
@@ -141,5 +185,35 @@ export function getHandlers(
         res(ctx.json(shareholders[id]));
       }
     ),
+
+    rest.patch<Share>("/share/:shareID/edit", async (req, res, ctx) => {
+      const session = sessionStorage.getItem("session");
+
+      if (!session || !JSON.parse(session).email) {
+        return res(
+          ctx.status(403),
+          ctx.json({
+            errorMessage: "You are not authorized",
+          })
+        );
+      }
+
+      const { value, id } = await req.json();
+
+      if (!shares[id]) {
+        return res(
+          ctx.status(404),
+          ctx.json({
+            errorMessage: "Could not find that share",
+          })
+        );
+      }
+
+      if (value) {
+        shares[id].value = value;
+      }
+
+      res(ctx.json(shares[id]));
+    }),
   ];
 }

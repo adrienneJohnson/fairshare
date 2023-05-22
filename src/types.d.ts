@@ -9,6 +9,12 @@ export interface Company {
 }
 
 export type ShareType = (typeof ShareTypes)[keyof typeof ShareTypes];
+
+export interface Share {
+  id: number;
+  value: string;
+  shareType: string;
+}
 export interface Grant {
   id: number;
   name: string;

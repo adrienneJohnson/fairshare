@@ -32,7 +32,7 @@ import {
 } from "@chakra-ui/react";
 import produce from "immer";
 import { useContext } from "react";
-import { Company, Grant, ShareType, Shareholder, User } from "../types";
+import { Company, Grant, Share, ShareType, Shareholder, User } from "../types";
 import { useMutation, useQueryClient } from "react-query";
 import { AuthContext } from "../App";
 import { ShareTypes } from "../consts";
@@ -45,6 +45,7 @@ export const OnboardingContext = React.createContext<
   companyName: "",
   shareholders: {},
   grants: {},
+  shareTypes: {},
   dispatch: () => {},
 });
 
@@ -101,7 +102,7 @@ export function CompanyStep() {
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    navigate("/start/shareholders");
+    navigate("/start/share-types");
   }
 
   return (
@@ -118,6 +119,114 @@ export function CompanyStep() {
         />
       </FormControl>
       <Button type="submit" colorScheme="teal" disabled={!companyName.length}>
+        Next
+      </Button>
+    </Stack>
+  );
+}
+
+export function ShareTypesStep() {
+  const { companyName, dispatch, shareTypes } = useContext(OnboardingContext);
+  const navigate = useNavigate();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const shareTypeValues = Object.values(shareTypes);
+  const format = (val: string) => `$` + val;
+  const parse = (val: string) => val.replace(/^\$/, "");
+
+  const [draftShareType, setDraftShareType] = React.useState<Omit<Share, "id">>(
+    {
+      shareType: "",
+      value: "",
+    }
+  );
+
+  function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    navigate("/start/shareholders");
+  }
+
+  const submitShareType = (e: React.FormEvent) => {
+    e.preventDefault();
+    dispatch({
+      type: "addShareType",
+      payload: draftShareType,
+    });
+    onClose();
+    setDraftShareType({ shareType: "", value: "" });
+  };
+
+  return (
+    <Stack>
+      <Text color="teal-400">
+        What types of shares does your company offer?
+      </Text>
+      <Table size="sm">
+        <Thead>
+          <Tr>
+            <Th>Name</Th>
+            <Th>Current Value</Th>
+            <Th></Th>
+          </Tr>
+        </Thead>
+        <Tbody>
+          {shareTypeValues.map((s) => (
+            <Tr key={s.shareType}>
+              <Td>{s.shareType}</Td>
+              <Td>{s.value}</Td>
+            </Tr>
+          ))}
+          {shareTypeValues.length === 0 && (
+            <Tr>
+              <Td colSpan={3} textAlign="center">
+                No share types to show for <strong>{companyName}</strong>
+              </Td>
+            </Tr>
+          )}
+        </Tbody>
+      </Table>
+      <Button variant="outline" onClick={onOpen}>
+        Add Share Type
+      </Button>
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalContent>
+          <Stack p="10" as="form" onSubmit={submitShareType}>
+            <Text>
+              Your company may have diffrent classes of stock, with varying
+              values. Please add them below.
+            </Text>
+            <FormControl>
+              <Select
+                placeholder="Type of Share"
+                onChange={(e) =>
+                  setDraftShareType((s) => ({
+                    ...s,
+                    shareType: e.target.value,
+                  }))
+                }
+              >
+                <option value={ShareTypes.Common}>Common</option>
+                <option value={ShareTypes.Preferred}>Preferred</option>
+              </Select>
+            </FormControl>
+            <FormControl>
+              <Input
+                step={0.2}
+                placeholder="Current value"
+                data-testid="share-value"
+                value={draftShareType.value ? format(draftShareType.value) : ""}
+                onChange={(e) =>
+                  setDraftShareType((s) => ({
+                    ...s,
+                    value: parse(e.target.value),
+                  }))
+                }
+              />
+            </FormControl>
+            <Button type="submit">Save</Button>
+          </Stack>
+        </ModalContent>
+      </Modal>
+      <Button onClick={onSubmit} colorScheme="teal">
         Next
       </Button>
     </Stack>
@@ -343,7 +452,7 @@ export function DoneStep() {
   const { authorize } = useContext(AuthContext);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { email, userName, companyName, shareholders, grants } =
+  const { email, userName, companyName, shareholders, grants, shareTypes } =
     useContext(OnboardingContext);
 
   const grantMutation = useMutation<Grant, unknown, Grant>((grant) =>
@@ -380,6 +489,13 @@ export function DoneStep() {
       body: JSON.stringify(company),
     }).then((res) => res.json())
   );
+  const shareMutation = useMutation<Share, unknown, Share>((share) =>
+    fetch("/share/new", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(share),
+    }).then((res) => res.json())
+  );
 
   React.useEffect(() => {
     async function saveData() {
@@ -392,6 +508,9 @@ export function DoneStep() {
           shareholderMutation.mutateAsync(shareholder)
         ),
         companyMutation.mutateAsync({ name: companyName }),
+        ...Object.values(shareTypes).map((shareType) =>
+          shareMutation.mutateAsync(shareType)
+        ),
       ]);
 
       if (user) {
@@ -419,6 +538,7 @@ export interface OnboardingFields {
   email: string;
   shareholders: { [shareholderID: number]: Shareholder };
   grants: { [grantID: number]: Grant };
+  shareTypes: { [shareID: number]: Share };
 }
 interface UpdateUserAction {
   type: "updateUser";
@@ -440,12 +560,17 @@ interface AddGrant {
   type: "addGrant";
   payload: { shareholderID: number; grant: Omit<Grant, "id"> };
 }
+interface AddShareType {
+  type: "addShareType";
+  payload: Omit<Share, "id">;
+}
 type OnboardingAction =
   | UpdateUserAction
   | UpdateEmail
   | UpdateCompanyAction
   | AddShareholderAction
-  | AddGrant;
+  | AddGrant
+  | AddShareType;
 export function signupReducer(
   state: OnboardingFields,
   action: OnboardingAction
@@ -497,6 +622,18 @@ export function signupReducer(
           nextGrantID
         );
         break;
+      case "addShareType":
+        const nextShareID =
+          Math.max(
+            0,
+            ...Object.keys(draft.shareTypes).map((e) => parseInt(e, 10))
+          ) + 1;
+        draft.shareTypes[nextShareID] = {
+          id: nextShareID,
+          ...action.payload,
+        };
+        console.log("Draft", draft);
+        break;
     }
   });
 }
@@ -507,6 +644,7 @@ export function Start() {
     companyName: "",
     shareholders: {},
     grants: {},
+    shareTypes: {},
   });
 
   return (
@@ -519,6 +657,7 @@ export function Start() {
           <Route path="/" element={<Navigate to="user" replace={true} />} />
           <Route path="user" element={<UserStep />} />
           <Route path="company" element={<CompanyStep />} />
+          <Route path="share-types" element={<ShareTypesStep />} />
           <Route path="shareholders" element={<ShareholdersStep />} />
           <Route
             path="grants"
