@@ -54,7 +54,7 @@ export function ShareholderPage() {
     name: "",
     amount: 0,
     issued: "",
-    type: ShareTypes.Common,
+    type: "",
   });
   const grantMutation = useMutation<Grant, unknown, Omit<Grant, "id">>(
     (grant) =>
@@ -101,7 +101,7 @@ export function ShareholderPage() {
         name: "",
         amount: 0,
         issued: "",
-        type: ShareTypes.Common,
+        type: "",
       });
     } catch (e) {
       console.warn(e);
@@ -242,7 +242,7 @@ export function ShareholderPage() {
               issued to a shareholder.
             </Text>
 
-            <FormControl>
+            <FormControl isRequired={true}>
               <Input
                 variant="flushed"
                 placeholder="Name"
@@ -253,7 +253,7 @@ export function ShareholderPage() {
                 }
               />
             </FormControl>
-            <FormControl>
+            <FormControl isRequired={true}>
               <Select
                 variant="flushed"
                 placeholder="Type of share"
@@ -273,7 +273,7 @@ export function ShareholderPage() {
                 ))}
               </Select>
             </FormControl>
-            <FormControl>
+            <FormControl isRequired={true}>
               <Input
                 variant="flushed"
                 placeholder="Shares"
@@ -288,7 +288,7 @@ export function ShareholderPage() {
                 }
               />
             </FormControl>
-            <FormControl>
+            <FormControl isRequired={true}>
               <Input
                 variant="flushed"
                 type="date"

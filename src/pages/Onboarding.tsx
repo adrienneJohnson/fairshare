@@ -385,7 +385,7 @@ export function ShareholderGrantsStep() {
               issued to a shareholder.
             </Text>
 
-            <FormControl>
+            <FormControl isRequired={true}>
               <Input
                 variant="flushed"
                 placeholder="Name"
@@ -396,7 +396,7 @@ export function ShareholderGrantsStep() {
                 }
               />
             </FormControl>
-            <FormControl>
+            <FormControl isRequired={true}>
               <Select
                 variant="flushed"
                 placeholder="Type of share"
@@ -416,7 +416,7 @@ export function ShareholderGrantsStep() {
                 ))}
               </Select>
             </FormControl>
-            <FormControl>
+            <FormControl isRequired={true}>
               <Input
                 variant="flushed"
                 placeholder="Shares"
@@ -430,7 +430,7 @@ export function ShareholderGrantsStep() {
                 }
               />
             </FormControl>
-            <FormControl>
+            <FormControl isRequired={true}>
               <Input
                 variant="flushed"
                 type="date"
