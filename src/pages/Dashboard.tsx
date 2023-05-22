@@ -30,42 +30,11 @@ import {
   Box,
   Spacer,
 } from "@chakra-ui/react";
-import { DataMap, Grant, Shareholder, ChartData, Share } from "../types";
+import { DataMap, Grant, Shareholder, Share } from "../types";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import produce from "immer";
-import { ChartViewModes, ShareTypes } from "../consts";
-
-export const calculateChartData = (
-  shareholder: DataMap<Shareholder>,
-  grant: DataMap<Grant>
-): Record<string, ChartData[]> => {
-  return {
-    [ChartViewModes.ByInvestor]: Object.values(shareholder)
-      .map((s) => ({
-        x: s.name,
-        y: s.grants.reduce(
-          (acc: number, grantID: number) => acc + grant[grantID].amount,
-          0
-        ),
-      }))
-      .filter((e) => e.y > 0),
-    [ChartViewModes.ByGroup]: ["investor", "founder", "employee"].map(
-      (group) => ({
-        x: group,
-        y: Object.values(shareholder)
-          .filter((s) => s.group === group)
-          .flatMap((s) => s.grants)
-          .reduce((acc, grantID: number) => acc + grant[grantID].amount, 0),
-      })
-    ),
-    [ChartViewModes.ByShareType]: Object.values(ShareTypes).map((c) => ({
-      x: c,
-      y: Object.values(grant)
-        .filter((g) => g.type === c)
-        .reduce((acc, grant) => acc + grant.amount, 0),
-    })),
-  };
-};
+import { ChartViewModes } from "../consts";
+import { calculateChartData, calculateShareTotals } from "../utils";
 
 export function Dashboard() {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -74,7 +43,6 @@ export function Dashboard() {
     Omit<Shareholder, "id" | "grants">
   >({ name: "", group: "employee" });
   const { mode = ChartViewModes.ByGroup } = useParams();
-
   const shareholderMutation = useMutation<
     Shareholder,
     unknown,
@@ -116,46 +84,24 @@ export function Dashboard() {
   );
 
   const chartData = useMemo(() => {
-    if (!shareholder.data || !grant.data) {
+    if (!shareholder.data || !grant.data || !shares.data) {
       return {};
     }
 
-    return calculateChartData(shareholder.data, grant.data);
-  }, [grant.data, shareholder.data]);
+    return calculateChartData(shareholder.data, grant.data, shares.data);
+  }, [grant.data, shareholder.data, shares.data]);
 
   const shareTotals = useMemo<
     Record<string, { numShares: number; valueShares: number }>
   >(() => {
     const chartDataByShareType = chartData[ChartViewModes.ByShareType];
 
-    if (!shares.data || !grant.data || !chartDataByShareType) {
+    if (!shares.data || !chartDataByShareType) {
       return {};
     }
 
-    return Object.values(shares.data).reduce(
-      (acc, shareType) => {
-        const { y: numShares } =
-          chartDataByShareType.find(
-            (data) => data["x"] === shareType.shareType
-          ) || ({} as ChartData);
-
-        const valueShares = numShares * parseFloat(shareType.value);
-
-        return {
-          ...acc,
-          [shareType.shareType]: {
-            numShares,
-            valueShares,
-          },
-          total: {
-            numShares: acc.total.numShares + numShares,
-            valueShares: acc.total.valueShares + valueShares,
-          },
-        };
-      },
-      { total: { numShares: 0, valueShares: 0 } }
-    );
-  }, [shares.data, grant.data, chartData]);
+    return calculateShareTotals(shares.data, chartDataByShareType);
+  }, [shares.data, chartData]);
 
   if (grant.status === "error") {
     return (
