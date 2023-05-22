@@ -130,7 +130,7 @@ describe("ShareholderPage", () => {
     expect(
       await within(grantTable).findByText(/Incentive Package 2019/)
     ).toBeInTheDocument();
-    expect(within(grantTable).getByText(/2000/)).toBeInTheDocument();
+    expect(within(grantTable).getByText("2,000")).toBeInTheDocument();
     expect(
       within(grantTable).getByText(new Date("2010-12-12").toLocaleDateString())
     ).toBeInTheDocument();
@@ -191,7 +191,7 @@ describe("ShareholderPage", () => {
     expect(
       await within(grantTable).findByText(/Incentive Package 2019/)
     ).toBeInTheDocument();
-    expect(within(grantTable).getByText(/2000/)).toBeInTheDocument();
+    expect(within(grantTable).getByText("2,000")).toBeInTheDocument();
     expect(
       within(grantTable).getByText(new Date("2010-12-12").toLocaleDateString())
     ).toBeInTheDocument();

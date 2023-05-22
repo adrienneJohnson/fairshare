@@ -70,12 +70,12 @@ export function ShareholderPage() {
       onSuccess: (data) => {
         // this doesn't seem to triggering an instant re-render on consumers even though thats that it should ...
         /// https://github.com/tannerlinsley/react-query/issues/326
-        queryClient.setQueryData<{ [id: number]: Shareholder } | undefined>(
-          "shareholders",
+        queryClient.setQueryData<Shareholder | undefined>(
+          "shareholder",
           (s) => {
             if (s)
-              return produce(s, (draft) => {
-                draft[parseInt(shareholderID, 10)].grants.push(data.id);
+              return produce(s, () => {
+                s.grants.push(data.id);
               });
           }
         );
