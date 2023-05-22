@@ -112,7 +112,11 @@ export function Dashboard() {
     );
   }
 
-  if (grant.status !== "success") {
+  if (
+    grant.status !== "success" ||
+    shareholder.status !== "success" ||
+    shares.status !== "success"
+  ) {
     return <Spinner />;
   }
   if (!grant.data || !shareholder.data || !shares.data) {
