@@ -1,5 +1,5 @@
 import React from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import {
   Text,
   Heading,
@@ -19,6 +19,8 @@ import {
   Alert,
   AlertTitle,
   AlertIcon,
+  Card,
+  CardBody,
   TableCaption,
   Select,
 } from "@chakra-ui/react";
@@ -35,9 +37,8 @@ export function ShareholderPage() {
   const grantQuery = useQuery<{ [dataID: number]: Grant }>("grants", () =>
     fetch("/grants").then((e) => e.json())
   );
-  const shareholderQuery = useQuery<{ [dataID: number]: Shareholder }>(
-    "shareholders",
-    () => fetch("/shareholders").then((e) => e.json())
+  const shareholderQuery = useQuery<Shareholder>("shareholder", () =>
+    fetch(`/shareholders/${shareholderID}`).then((e) => e.json())
   );
   // This is needed by candidates, and put here early so candidates don't get caught up on react-query
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -114,7 +115,30 @@ export function ShareholderPage() {
   ) {
     return <Spinner />;
   }
-  if (!grantQuery.data || !shareholderQuery.data || !shareQuery.data) {
+
+  if ("errorMessage" in shareholderQuery.data) {
+    return (
+      <>
+        <Alert status="error">
+          <AlertIcon />
+          <AlertTitle>
+            Error: {`${shareholderQuery.data.errorMessage}`}
+          </AlertTitle>
+        </Alert>
+        <Card>
+          <CardBody>
+            Click{" "}
+            <Link to="/dashboard">
+              <Text color="teal.500">here</Text>
+            </Link>
+            to view the full list of shareholders.
+          </CardBody>
+        </Card>
+      </>
+    );
+  }
+
+  if (!grantQuery.data || !shareQuery.data) {
     return (
       <Alert status="error">
         <AlertIcon />
@@ -123,7 +147,7 @@ export function ShareholderPage() {
     );
   }
 
-  const shareholder = shareholderQuery.data[parseInt(shareholderID)];
+  const shareholder = shareholderQuery.data;
   const shareTypes = Object.values(shareQuery.data);
 
   const calculateShareValue = (
@@ -191,20 +215,18 @@ export function ShareholderPage() {
           </Tr>
         </Thead>
         <Tbody role="rowgroup">
-          {shareholderQuery.data[parseInt(shareholderID, 10)].grants.map(
-            (grantID) => {
-              const { name, issued, amount, type } = grantQuery.data[grantID];
-              return (
-                <Tr key={grantID}>
-                  <Td>{name}</Td>
-                  <Td>{new Date(issued).toLocaleDateString()}</Td>
-                  <Td>{amount.toLocaleString()}</Td>
-                  <Td>{type}</Td>
-                  <Td>{calculateShareValue(shareTypes, type, amount)}</Td>
-                </Tr>
-              );
-            }
-          )}
+          {shareholderQuery.data.grants.map((grantID) => {
+            const { name, issued, amount, type } = grantQuery.data[grantID];
+            return (
+              <Tr key={grantID}>
+                <Td>{name}</Td>
+                <Td>{new Date(issued).toLocaleDateString()}</Td>
+                <Td>{amount.toLocaleString()}</Td>
+                <Td>{type}</Td>
+                <Td>{calculateShareValue(shareTypes, type, amount)}</Td>
+              </Tr>
+            );
+          })}
         </Tbody>
         <TableCaption>
           <Button colorScheme="teal" onClick={onOpen}>

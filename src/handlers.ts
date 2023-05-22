@@ -165,6 +165,26 @@ export function getHandlers(
       return res(ctx.json(shareholders));
     }),
 
+    rest.get<Shareholder>("/shareholders/:shareholderID", (req, res, ctx) => {
+      const { shareholderID } = req.params;
+
+      const shareholder = Object.values(shareholders).find(
+        (sh) => sh.id === Number(shareholderID)
+      );
+
+      if (!shareholder) {
+        return res(
+          ctx.status(404),
+          ctx.json({
+            status: "error",
+            errorMessage: "Shareholder not found",
+          })
+        );
+      }
+
+      return res(ctx.json(shareholder));
+    }),
+
     rest.get("/company", (req, res, ctx) => {
       return res(ctx.json(company));
     }),
