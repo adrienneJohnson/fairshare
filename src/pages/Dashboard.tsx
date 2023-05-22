@@ -1,8 +1,9 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { VictoryPie } from "victory";
 import { Link, useParams } from "react-router-dom";
 import { ArrowForwardIcon } from "@chakra-ui/icons";
 import {
+  Radio,
   Text,
   Heading,
   Stack,
@@ -30,7 +31,14 @@ import {
   Box,
   Spacer,
 } from "@chakra-ui/react";
-import { DataMap, Grant, Shareholder, Share } from "../types";
+import {
+  DataMap,
+  Grant,
+  Shareholder,
+  Share,
+  ChartDataSets,
+  ChartViewMode,
+} from "../types";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import produce from "immer";
 import { ChartViewModes } from "../consts";
@@ -43,6 +51,8 @@ export function Dashboard() {
     Omit<Shareholder, "id" | "grants">
   >({ name: "", group: "employee" });
   const { mode = ChartViewModes.ByGroup } = useParams();
+  const [metric, setMetric] = useState<"number" | "value">("number");
+
   const shareholderMutation = useMutation<
     Shareholder,
     unknown,
@@ -83,9 +93,9 @@ export function Dashboard() {
     fetch("/shares").then((e) => e.json())
   );
 
-  const chartData = useMemo(() => {
+  const chartData: ChartDataSets = useMemo(() => {
     if (!shareholder.data || !grant.data || !shares.data) {
-      return {};
+      return {} as ChartDataSets;
     }
 
     return calculateChartData(shareholder.data, grant.data, shares.data);
@@ -100,7 +110,7 @@ export function Dashboard() {
       return {};
     }
 
-    return calculateShareTotals(shares.data, chartDataByShareType);
+    return calculateShareTotals(shares.data, chartDataByShareType.number);
   }, [shares.data, chartData]);
 
   if (grant.status === "error") {
@@ -174,7 +184,31 @@ export function Dashboard() {
           </Button>
         </Stack>
       </Stack>
-      <VictoryPie colorScale="blue" data={chartData[mode]} />
+      <Stack>
+        <Radio
+          size="md"
+          name="1"
+          colorScheme="teal"
+          isChecked={metric === "number"}
+          onChange={() => setMetric("number")}
+        >
+          Number of Shares
+        </Radio>
+        <Radio
+          size="md"
+          name="1"
+          colorScheme="teal"
+          isChecked={metric === "value"}
+          onChange={() => setMetric("value")}
+        >
+          Value of Shares
+        </Radio>
+      </Stack>
+
+      <VictoryPie
+        colorScale="blue"
+        data={chartData[mode as ChartViewMode][metric]}
+      />
       <Stack divider={<StackDivider />}>
         <Heading>Market Value</Heading>
         <Box>

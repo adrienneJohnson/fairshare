@@ -1,38 +1,92 @@
-import { DataMap, Grant, Shareholder, ChartData, Share } from "./types";
+import {
+  DataMap,
+  Grant,
+  Shareholder,
+  ChartData,
+  Share,
+  ChartDataSets,
+} from "./types";
 import { ChartViewModes } from "./consts";
+
+const addNumShares = (grants: number[], grant: DataMap<Grant>) => {
+  return grants.reduce((acc, grantID) => acc + grant[grantID].amount, 0);
+};
+
+const addShareValues = (
+  grants: number[],
+  grant: DataMap<Grant>,
+  shares: DataMap<Share>
+) => {
+  return grants.reduce((acc, grantID) => {
+    const share =
+      Object.values(shares).find((s) => s.shareType === grant[grantID].type) ||
+      ({} as Share);
+    return acc + grant[grantID].amount * parseFloat(share.currentValue);
+  }, 0);
+};
 
 export const calculateChartData = (
   shareholder: DataMap<Shareholder>,
   grant: DataMap<Grant>,
   shares: DataMap<Share>
-): Record<string, ChartData[]> => {
+): ChartDataSets => {
   return {
-    [ChartViewModes.ByInvestor]: Object.values(shareholder)
-      .map((s) => ({
-        x: s.name,
-        y: s.grants.reduce(
-          (acc: number, grantID: number) => acc + grant[grantID].amount,
-          0
-        ),
-      }))
-      .filter((e) => e.y > 0),
-    [ChartViewModes.ByGroup]: ["investor", "founder", "employee"].map(
-      (group) => ({
+    [ChartViewModes.ByInvestor]: {
+      number: Object.values(shareholder)
+        .map((s) => ({
+          x: s.name,
+          y: addNumShares(s.grants, grant),
+        }))
+        .filter((e) => e.y > 0),
+      value: Object.values(shareholder)
+        .map((s) => ({
+          x: s.name,
+          y: addShareValues(s.grants, grant, shares),
+        }))
+        .filter((e) => e.y > 0),
+    },
+    [ChartViewModes.ByGroup]: {
+      number: ["investor", "founder", "employee"].map((group) => ({
         x: group,
-        y: Object.values(shareholder)
-          .filter((s) => s.group === group)
-          .flatMap((s) => s.grants)
-          .reduce((acc, grantID: number) => acc + grant[grantID].amount, 0),
-      })
-    ),
-    [ChartViewModes.ByShareType]: Object.values(shares).map(
-      ({ shareType }) => ({
+        y: addNumShares(
+          Object.values(shareholder)
+            .filter((s) => s.group === group)
+            .flatMap((s) => s.grants),
+          grant
+        ),
+      })),
+      value: ["investor", "founder", "employee"].map((group) => ({
+        x: group,
+        y: addShareValues(
+          Object.values(shareholder)
+            .filter((s) => s.group === group)
+            .flatMap((s) => s.grants),
+          grant,
+          shares
+        ),
+      })),
+    },
+    [ChartViewModes.ByShareType]: {
+      number: Object.values(shares).map(({ shareType }) => ({
         x: shareType,
-        y: Object.values(grant)
-          .filter((g) => g.type === shareType)
-          .reduce((acc, grant) => acc + grant.amount, 0),
-      })
-    ),
+        y: addNumShares(
+          Object.values(grant)
+            .filter((g) => g.type === shareType)
+            .map((g) => g.id),
+          grant
+        ),
+      })),
+      value: Object.values(shares).map(({ shareType }) => ({
+        x: shareType,
+        y: addShareValues(
+          Object.values(grant)
+            .filter((g) => g.type === shareType)
+            .map((g) => g.id),
+          grant,
+          shares
+        ),
+      })),
+    },
   };
 };
 

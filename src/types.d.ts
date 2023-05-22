@@ -38,3 +38,14 @@ export interface ChartData {
   x: string;
   y: number;
 }
+
+export interface ChartDataSets {
+  [ChartViewModes.ByInvestor]: ChartDataSet;
+  [ChartViewModes.ByGroup]: ChartDataSet;
+  [ChartViewModes.ByShareType]: ChartDataSet;
+}
+
+export interface ChartDataSet {
+  number: ChartData[];
+  value: ChartData[];
+}

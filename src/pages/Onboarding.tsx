@@ -195,7 +195,7 @@ export function ShareTypesStep() {
               Please add your company's classes of stock and the current value
               for each.
             </Text>
-            <FormControl>
+            <FormControl isRequired={true}>
               <Input
                 variant="flushed"
                 placeholder="Share Type"
@@ -209,7 +209,7 @@ export function ShareTypesStep() {
                 }
               />
             </FormControl>
-            <FormControl>
+            <FormControl isRequired={true}>
               <Input
                 step={0.2}
                 placeholder="Current value"

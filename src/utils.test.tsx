@@ -73,20 +73,33 @@ describe("calculateChartData", () => {
 
     const actual = calculateChartData(shareholders, grants, shares);
 
-    const actualByGroup = actual[ChartViewModes.ByGroup];
-    const expectedByGroup = [
+    const actualByGroupNumber = actual[ChartViewModes.ByGroup].number;
+    const expectedByGroupNumber = [
       { x: "investor", y: 20 },
       { x: "employee", y: 20 },
       { x: "founder", y: 20 },
     ];
 
-    expectedByGroup.forEach((result) =>
-      expect(actualByGroup).toEqual(
+    expectedByGroupNumber.forEach((result) =>
+      expect(actualByGroupNumber).toEqual(
         expect.arrayContaining([expect.objectContaining(result)])
       )
     );
 
-    const actualByInvestor = actual[ChartViewModes.ByInvestor];
+    const actualByGroupValue = actual[ChartViewModes.ByGroup].value;
+    const expectedByGroupValue = [
+      { x: "investor", y: 150 },
+      { x: "employee", y: 150 },
+      { x: "founder", y: 150 },
+    ];
+
+    expectedByGroupValue.forEach((result) =>
+      expect(actualByGroupValue).toEqual(
+        expect.arrayContaining([expect.objectContaining(result)])
+      )
+    );
+
+    const actualByInvestor = actual[ChartViewModes.ByInvestor].number;
     const expectedByInvestor = [
       { x: "Tony", y: 20 },
       { x: "Tonya", y: 20 },
@@ -99,7 +112,20 @@ describe("calculateChartData", () => {
       )
     );
 
-    const actualByShareType = actual[ChartViewModes.ByShareType];
+    const actualByInvestorValue = actual[ChartViewModes.ByInvestor].value;
+    const expectedByInvestorValue = [
+      { x: "Tony", y: 150 },
+      { x: "Tonya", y: 150 },
+      { x: "Tiffany", y: 150 },
+    ];
+
+    expectedByInvestorValue.forEach((result) =>
+      expect(actualByInvestorValue).toEqual(
+        expect.arrayContaining([expect.objectContaining(result)])
+      )
+    );
+
+    const actualByShareType = actual[ChartViewModes.ByShareType].number;
     const expectedByShareType = [
       { x: ShareTypes.Common, y: 30 },
       { x: ShareTypes.Preferred, y: 30 },
@@ -107,6 +133,18 @@ describe("calculateChartData", () => {
 
     expectedByShareType.forEach((result) =>
       expect(actualByShareType).toEqual(
+        expect.arrayContaining([expect.objectContaining(result)])
+      )
+    );
+
+    const actualByShareTypeValue = actual[ChartViewModes.ByShareType].value;
+    const expectedByShareTypeValue = [
+      { x: ShareTypes.Common, y: 150 },
+      { x: ShareTypes.Preferred, y: 300 },
+    ];
+
+    expectedByShareTypeValue.forEach((result) =>
+      expect(actualByShareTypeValue).toEqual(
         expect.arrayContaining([expect.objectContaining(result)])
       )
     );
