@@ -20,7 +20,7 @@ export interface Grant {
   name: string;
   amount: number;
   issued: string;
-  type: ShareType;
+  type: string;
 }
 export interface Shareholder {
   id: number;
