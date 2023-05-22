@@ -102,7 +102,7 @@ export function CompanyStep() {
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    navigate("/start/share-types");
+    navigate("../share-types");
   }
 
   return (
@@ -142,7 +142,7 @@ export function ShareTypesStep() {
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    navigate("/start/shareholders");
+    navigate("../shareholders");
   }
 
   const submitShareType = (e: React.FormEvent) => {
@@ -295,7 +295,7 @@ export function ShareholdersStep() {
       <Button colorScheme="teal" variant="outline" onClick={onOpen}>
         Add Shareholder
       </Button>
-      <Button as={Link} to="/start/grants" colorScheme="teal">
+      <Button as={Link} to="../grants/0" colorScheme="teal">
         Next
       </Button>
     </Stack>
@@ -308,7 +308,6 @@ export function ShareholderGrantsStep() {
   const { shareholderID = "" } = useParams();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const shareholder = shareholders[parseInt(shareholderID, 10)];
-  const navigate = useNavigate();
 
   const [draftGrant, setDraftGrant] = React.useState<Omit<Grant, "id">>({
     name: "",
@@ -318,11 +317,12 @@ export function ShareholderGrantsStep() {
   });
 
   if (!shareholder) {
-    return <Navigate to="/start/shareholders" replace={true} />;
+    return <Navigate to="../shareholders" replace={true} />;
   }
+
   const nextLink = !shareholders[shareholder.id + 1]
     ? `../done`
-    : `../../grants/${shareholder.id + 1}`;
+    : `../grants/${shareholder.id + 1}`;
 
   function submitGrant(e: React.FormEvent) {
     e.preventDefault();
@@ -662,10 +662,6 @@ export function Start() {
           <Route path="company" element={<CompanyStep />} />
           <Route path="share-types" element={<ShareTypesStep />} />
           <Route path="shareholders" element={<ShareholdersStep />} />
-          <Route
-            path="grants"
-            element={<Navigate to={`/start/grants/0`} replace={true} />}
-          />
           <Route
             path="grants/:shareholderID"
             element={<ShareholderGrantsStep />}

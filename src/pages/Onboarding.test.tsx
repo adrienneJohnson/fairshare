@@ -11,6 +11,7 @@ import {
   OnboardingFields,
   ShareholderGrantsStep,
   ShareholdersStep,
+  ShareTypesStep,
   signupReducer,
   UserStep,
 } from "./Onboarding";
@@ -47,12 +48,13 @@ const Page = ({
         <Route path="user" element={<UserStep />} />
         <Route path="company" element={<CompanyStep />} />
         <Route path="shareholders" element={<ShareholdersStep />} />
-        <Route
-          path="grants"
-          element={<Navigate to={`/grants/0`} replace={true} />}
-        />
+        <Route path="share-types" element={<ShareTypesStep />} />
         <Route
           path="grants/:shareholderID"
+          element={<ShareholderGrantsStep />}
+        />
+        <Route
+          path="start/grants/:shareholderID"
           element={<ShareholderGrantsStep />}
         />
         <Route path="done" element={<div />} />
@@ -163,7 +165,7 @@ describe("Onboarding", () => {
   });
 
   it("should allow for configuring shareholder grants", async () => {
-    const Router = getTestRouter("/grants");
+    const Router = getTestRouter("/grants/0");
     render(
       <Router>
         <Page
