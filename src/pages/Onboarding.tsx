@@ -172,7 +172,7 @@ export function ShareTypesStep() {
           {shareTypeValues.map((s) => (
             <Tr key={s.shareType}>
               <Td>{s.shareType}</Td>
-              <Td>{s.value}</Td>
+              <Td>${s.value}</Td>
             </Tr>
           ))}
           {shareTypeValues.length === 0 && (
@@ -191,22 +191,22 @@ export function ShareTypesStep() {
         <ModalContent>
           <Stack p="10" as="form" onSubmit={submitShareType}>
             <Text>
-              Your company may have diffrent classes of stock, with varying
-              values. Please add them below.
+              Please add your company's classes of stock and the current value
+              for each.
             </Text>
             <FormControl>
-              <Select
-                placeholder="Type of Share"
+              <Input
+                variant="flushed"
+                placeholder="Share Type"
+                data-testid="share-type-name"
+                value={draftShareType.shareType}
                 onChange={(e) =>
                   setDraftShareType((s) => ({
                     ...s,
                     shareType: e.target.value,
                   }))
                 }
-              >
-                <option value={ShareTypes.Common}>Common</option>
-                <option value={ShareTypes.Preferred}>Preferred</option>
-              </Select>
+              />
             </FormControl>
             <FormControl>
               <Input
@@ -303,16 +303,18 @@ export function ShareholdersStep() {
 }
 
 export function ShareholderGrantsStep() {
-  const { shareholders, grants, dispatch } = useContext(OnboardingContext);
+  const { shareholders, grants, shareTypes, dispatch } =
+    useContext(OnboardingContext);
   const { shareholderID = "" } = useParams();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const shareholder = shareholders[parseInt(shareholderID, 10)];
+  const navigate = useNavigate();
 
   const [draftGrant, setDraftGrant] = React.useState<Omit<Grant, "id">>({
     name: "",
     amount: 0,
     issued: "",
-    type: ShareTypes.Common,
+    type: "",
   });
 
   if (!shareholder) {
@@ -332,9 +334,8 @@ export function ShareholderGrantsStep() {
       },
     });
     onClose();
-    setDraftGrant({ name: "", amount: 0, issued: "", type: ShareTypes.Common });
+    setDraftGrant({ name: "", amount: 0, issued: "", type: "" });
   }
-  console.log(shareholder);
 
   return (
     <Stack>
@@ -408,8 +409,11 @@ export function ShareholderGrantsStep() {
                   }))
                 }
               >
-                <option value={ShareTypes.Common}>Common</option>
-                <option value={ShareTypes.Preferred}>Preferred</option>
+                {Object.values(shareTypes).map(({ id, shareType }) => (
+                  <option value={shareType} key={id}>
+                    {shareType}
+                  </option>
+                ))}
               </Select>
             </FormControl>
             <FormControl>
@@ -632,7 +636,6 @@ export function signupReducer(
           id: nextShareID,
           ...action.payload,
         };
-        console.log("Draft", draft);
         break;
     }
   });
