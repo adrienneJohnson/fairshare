@@ -25,10 +25,9 @@ import {
   Select,
 } from "@chakra-ui/react";
 import { ReactComponent as Avatar } from "../assets/avatar-male.svg";
-import { Company, Grant, Share, ShareType, Shareholder } from "../types";
+import { Company, Grant, Share, Shareholder } from "../types";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import produce from "immer";
-import { ShareTypes } from "../consts";
 
 export function ShareholderPage() {
   const queryClient = useQueryClient();
@@ -158,7 +157,9 @@ export function ShareholderPage() {
     const shareType = shareTypes.find((st) => st.shareType === type);
 
     if (shareType) {
-      return "$" + (parseFloat(shareType.value) * amount).toLocaleString();
+      return (
+        "$" + (parseFloat(shareType.currentValue) * amount).toLocaleString()
+      );
     } else {
       return "N/A";
     }
@@ -262,7 +263,7 @@ export function ShareholderPage() {
                 onChange={(e) =>
                   setDraftGrant((g) => ({
                     ...g,
-                    type: e.target.value as ShareType,
+                    type: e.target.value,
                   }))
                 }
               >

@@ -32,7 +32,7 @@ import {
 } from "@chakra-ui/react";
 import produce from "immer";
 import { useContext } from "react";
-import { Company, Grant, Share, ShareType, Shareholder, User } from "../types";
+import { Company, Grant, Share, Shareholder, User } from "../types";
 import { useMutation, useQueryClient } from "react-query";
 import { AuthContext } from "../App";
 import { ShareTypes } from "../consts";
@@ -136,7 +136,8 @@ export function ShareTypesStep() {
   const [draftShareType, setDraftShareType] = React.useState<Omit<Share, "id">>(
     {
       shareType: "",
-      value: "",
+      currentValue: "",
+      startValue: "",
     }
   );
 
@@ -152,7 +153,7 @@ export function ShareTypesStep() {
       payload: draftShareType,
     });
     onClose();
-    setDraftShareType({ shareType: "", value: "" });
+    setDraftShareType({ shareType: "", currentValue: "", startValue: "" });
   };
 
   return (
@@ -172,7 +173,7 @@ export function ShareTypesStep() {
           {shareTypeValues.map((s) => (
             <Tr key={s.shareType}>
               <Td>{s.shareType}</Td>
-              <Td>${s.value}</Td>
+              <Td>${s.currentValue}</Td>
             </Tr>
           ))}
           {shareTypeValues.length === 0 && (
@@ -213,11 +214,16 @@ export function ShareTypesStep() {
                 step={0.2}
                 placeholder="Current value"
                 data-testid="share-value"
-                value={draftShareType.value ? format(draftShareType.value) : ""}
+                value={
+                  draftShareType.currentValue
+                    ? format(draftShareType.currentValue)
+                    : ""
+                }
                 onChange={(e) =>
                   setDraftShareType((s) => ({
                     ...s,
-                    value: parse(e.target.value),
+                    currentValue: parse(e.target.value),
+                    startValue: parse(e.target.value),
                   }))
                 }
               />
@@ -405,7 +411,7 @@ export function ShareholderGrantsStep() {
                 onChange={(e) =>
                   setDraftGrant((g) => ({
                     ...g,
-                    type: e.target.value as ShareType,
+                    type: e.target.value,
                   }))
                 }
               >

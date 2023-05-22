@@ -44,12 +44,14 @@ describe("ShareholderPage", () => {
         1: {
           id: 1,
           shareType: ShareTypes.Common,
-          value: "1.5",
+          startValue: "1.5",
+          currentValue: "1.5",
         },
         2: {
           id: 2,
           shareType: ShareTypes.Preferred,
-          value: "5",
+          startValue: "1.5",
+          currentValue: "5",
         },
       },
     };

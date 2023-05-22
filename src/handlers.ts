@@ -124,21 +124,9 @@ export function getHandlers(
     }),
 
     rest.post<Omit<Share, "id">>("/share/new", async (req, res, ctx) => {
-      const { value, shareType } = await req.json();
+      const { startValue, currentValue, shareType } = await req.json();
 
-      // Included a gesture/placeholder here and in the share update endpoint to acknowledge that requests like these would have authentication and permission checks.
-      // const session = sessionStorage.getItem("session");
-      // console.log("checking session in handler", session);
-      // if (!session || !JSON.parse(session).email) {
-      //   return res(
-      //     ctx.status(403),
-      //     ctx.json({
-      //       errorMessage: "You are not authorized",
-      //     })
-      //   );
-      // }
-
-      if (!value || !shareType) {
+      if (!startValue || !shareType) {
         return res(
           ctx.status(400),
           ctx.json({
@@ -149,7 +137,8 @@ export function getHandlers(
 
       const share: Share = {
         shareType,
-        value,
+        startValue,
+        currentValue: currentValue || startValue,
         id: nextID(shares),
       };
       shares[share.id] = share;
@@ -209,6 +198,7 @@ export function getHandlers(
     rest.patch<Share>("/share/:shareID/edit", async (req, res, ctx) => {
       const session = sessionStorage.getItem("session");
 
+      // Included a gesture/placeholder just in case, to acknowledge that requests like these might have authentication and permission checks (if the db didn't live in the browser).
       if (!session || !JSON.parse(session).email) {
         return res(
           ctx.status(403),
@@ -218,19 +208,19 @@ export function getHandlers(
         );
       }
 
-      const { value, id } = await req.json();
+      const { currentValue, id } = await req.json();
 
       if (!shares[id]) {
         return res(
           ctx.status(404),
           ctx.json({
-            errorMessage: "Could not find that share",
+            errorMessage: "Could not find that share type",
           })
         );
       }
 
-      if (value) {
-        shares[id].value = value;
+      if (currentValue) {
+        shares[id].currentValue = currentValue;
       }
 
       res(ctx.json(shares[id]));

@@ -32,7 +32,7 @@ describe("calculateChartData", () => {
         amount: 10,
         issued: Date.now().toLocaleString(),
         type: ShareTypes.Common,
-      }, // $150 / 30
+      },
       4: {
         id: 4,
         name: "Options Conversion 2019",
@@ -54,17 +54,19 @@ describe("calculateChartData", () => {
         issued: Date.now().toLocaleString(),
         type: ShareTypes.Preferred,
       },
-    }; // $300 / 30
+    };
 
     const shares = {
       1: {
         id: 1,
-        value: "5",
+        startValue: "5",
+        currentValue: "5",
         shareType: ShareTypes.Common,
       },
       2: {
         id: 2,
-        value: "10.00",
+        startValue: "5",
+        currentValue: "10.00",
         shareType: ShareTypes.Preferred,
       },
     };
@@ -116,12 +118,14 @@ describe("calculateShareTotals", () => {
     const shares = {
       1: {
         id: 1,
-        value: "5",
+        startValue: "5",
+        currentValue: "5",
         shareType: ShareTypes.Common,
       },
       2: {
         id: 2,
-        value: "10.00",
+        startValue: "5",
+        currentValue: "10.00",
         shareType: ShareTypes.Preferred,
       },
     };

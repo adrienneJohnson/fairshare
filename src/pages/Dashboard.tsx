@@ -188,16 +188,18 @@ export function Dashboard() {
               </Tr>
             </Thead>
             <Tbody>
-              {Object.values(shares.data).map(({ id, shareType, value }) => (
-                <Tr key={id}>
-                  <Td>{shareType}</Td>
-                  <Td>{shareTotals[shareType].numShares.toLocaleString()}</Td>
-                  <Td>${value}</Td>
-                  <Td>
-                    ${shareTotals[shareType].valueShares.toLocaleString()}
-                  </Td>
-                </Tr>
-              ))}
+              {Object.values(shares.data).map(
+                ({ id, shareType, currentValue }) => (
+                  <Tr key={id}>
+                    <Td>{shareType}</Td>
+                    <Td>{shareTotals[shareType].numShares.toLocaleString()}</Td>
+                    <Td>${currentValue}</Td>
+                    <Td>
+                      ${shareTotals[shareType].valueShares.toLocaleString()}
+                    </Td>
+                  </Tr>
+                )
+              )}
             </Tbody>
           </Table>
           <StatGroup backgroundColor="teal.100">

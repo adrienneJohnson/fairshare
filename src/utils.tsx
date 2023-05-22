@@ -1,5 +1,5 @@
 import { DataMap, Grant, Shareholder, ChartData, Share } from "./types";
-import { ChartViewModes, ShareTypes } from "./consts";
+import { ChartViewModes } from "./consts";
 
 export const calculateChartData = (
   shareholder: DataMap<Shareholder>,
@@ -47,7 +47,7 @@ export const calculateShareTotals = (
           (data: ChartData) => data["x"] === shareType.shareType
         ) || ({} as ChartData);
 
-      const valueShares = numShares * parseFloat(shareType.value);
+      const valueShares = numShares * parseFloat(shareType.currentValue);
 
       return {
         ...acc,

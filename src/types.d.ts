@@ -1,4 +1,4 @@
-import { ChartViewModes, ShareTypes } from "./consts";
+import { ChartViewModes } from "./consts";
 export interface User {
   name: string;
   email: string;
@@ -7,12 +7,10 @@ export interface User {
 export interface Company {
   name: string;
 }
-
-export type ShareType = (typeof ShareTypes)[keyof typeof ShareTypes];
-
 export interface Share {
   id: number;
-  value: string;
+  startValue: string;
+  currentValue: string;
   shareType: string;
 }
 export interface Grant {
